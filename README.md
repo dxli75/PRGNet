@@ -1,9 +1,9 @@
 # PRGNet
-1.Preparing complex
+1.Prepare complex.
 bash prepare_data.sh
 
-2.prepare graph
+2.Prepare graph
 python prepare_graph.py
 
-3.train
+3.Train
 python train.py
