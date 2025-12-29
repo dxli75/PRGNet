@@ -1163,10 +1163,10 @@ def save_graphs(graph_list, path):
 # ========== 主程序 ==========
 if __name__ == "__main__":
     config = {
-        "complex_dir": "./dataset/complex-pocket-ligand",
-        "ss2_dir": "./dataset/dssp",
-        "key_file": "./dataset/PDBBind_v2020_labels.txt",
-        "output_dir":"./dataset/ds_feature"
+        "complex_dir": "./dataset/v2020/complex-pocket-ligand",
+        "ss2_dir": "./dataset/v2020/dssp",
+        "key_file": "./dataset/v2020/PDBBind_v2020_labels.txt",
+        "output_dir":"./dataset/v2020/ds_feature"
     }
 
     atom_graphs = process_dataset(
@@ -1177,4 +1177,5 @@ if __name__ == "__main__":
     )
     
     os.makedirs(config["output_dir"], exist_ok=True)
+
     save_graphs(atom_graphs, f"{config['output_dir']}/atom_graphs.npy")
