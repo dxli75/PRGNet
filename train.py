@@ -90,7 +90,7 @@ def train_full_model(
 
 
 if __name__ == "__main__":
-    DATA_PATH = "../../preprocessing/v2020_1031/ds_feature_PLI/atom_graphs_train_val.npy"
+    DATA_PATH = "../graph/v2020/atom_graphs.npy"
     best_rmse = train_full_model(
         data_path=DATA_PATH,
         batch_size=32,
@@ -101,6 +101,7 @@ if __name__ == "__main__":
         num_gat_layers=1,
         dropout=0.1,
         heads=1,
-        save_dir="./model_1127"
+        save_dir="./model_v2020"
     )
     print("Best RMSE:", best_rmse)
+
