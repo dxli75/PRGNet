@@ -3,12 +3,12 @@ set -euo pipefail
 shopt -s nullglob
 
 SOURCE_DIR="./dataset/PDBbind_v2020"
-TARGET_DIR="./dataset/complex_dir_PDBbind_v2020"
-POCKET_DIR="./dataset/pocket_dir_PDBbind_v2020"
-COMPLEX_DIR="./dataset/complex_pocket_ligand"
-LIGAND_DIR="./dataset/ligand_dir_PDBbind_v2020"
-PROTEIN_FIX_DIR="./dataset/protein_fix"
-DSSP_DIR="./dataset/dssp"
+TARGET_DIR="./dataset/v2020/complex_dir_PDBbind_v2020"
+POCKET_DIR="./dataset/v2020/pocket_dir_PDBbind_v2020"
+COMPLEX_DIR="./dataset/v2020/complex_pocket_ligand"
+LIGAND_DIR="./dataset/v2020/ligand_dir_PDBbind_v2020"
+PROTEIN_FIX_DIR="./dataset/v2020/protein_fix"
+DSSP_DIR="./dataset/v2020/dssp"
 
 # 创建目标目录
 mkdir -p "$TARGET_DIR" "$POCKET_DIR" "$COMPLEX_DIR" "$LIGAND_DIR" "$PROTEIN_FIX_DIR" "$DSSP_DIR"
