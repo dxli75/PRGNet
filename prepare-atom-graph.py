@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore", category=BiopythonWarning, module='Bio.PDB')
 warnings.filterwarnings("ignore", category=UserWarning, module='Bio.PDB.DSSP')
 warnings.filterwarnings("ignore", message="'num_faces' is deprecated")
 
-# ========== 配置参数 ==========
+# ====================
 PERMITTED_ATOMS = ['C', 'N', 'O', 'S', 'F', 'H', 'Si', 'P', 'Cl', 'Br', 'Mg', 'Na', 
                   'Ca', 'Fe', 'As', 'Al', 'I', 'B', 'V', 'K', 'Tl', 'Yb', 'Sb', 
                   'Sn', 'Ag', 'Pd', 'Co', 'Se', 'Ti', 'Zn', 'Li', 'Ge', 'Cu', 
@@ -32,21 +32,20 @@ PERMITTED_BOND_TYPES = [
 
 STEREO_TYPES = ["STEREOZ", "STEREOE", "STEREOANY", "STEREONONE"]
 
-# 全局配置
-USE_CHIRALITY = True  # 是否使用手性特征
-USE_STEREO = True     # 是否使用立体化学特征
-INTERACTION_CUTOFF = 5.0  # 非键相互作用的距离阈值(Å)
-SPATIAL_CUTOFF = 8.0  # 空间邻近边阈值
+USE_CHIRALITY = True  
+USE_STEREO = True     
+INTERACTION_CUTOFF = 5.0  
+SPATIAL_CUTOFF = 8.0  
 
-# ========== 蛋白质特征配置 ==========
-# 残基符号映射表
+# ====================
+# Residual Symbol Mapping Table
 ressymbl = {'ALA': 'A', 'CYS': 'C', 'ASP': 'D', 'GLU':'E', 'PHE': 'F', 'GLY': 'G',
            'HIS': 'H', 'ILE': 'I', 'LYS': 'K', 'LEU': 'L', 'MET': 'M', 'ASN': 'N',
            'PRO': 'P', 'GLN':'Q', 'ARG':'R', 'SER': 'S','THR': 'T', 'VAL': 'V',
            'TRP':'W', 'TYR': 'Y'}
 res_table = list(ressymbl.values())
 
-dssp_table = ["H", "B", "E", "G", "I", "T", "S", "-"]  # 完整8类DSSP编码
+dssp_table = ["H", "B", "E", "G", "I", "T", "S", "-"]  # DSSP Encoding
 
 pcp_dict = {'A':[ 0.62014, -0.18875, -1.23870, -0.083627,-1.32960, -1.38170, -0.44118],
             'C':[ 0.29007, -0.44041, -0.76847, -1.05000, -0.48930, -0.77494, -1.11480],
@@ -77,7 +76,7 @@ lig_properties_error_ids = []
 H_error_ids = []         
 miss_data = []
 
-# ========== 核心函数修改 ==========
+# ========== Feature Functions ==========
 def one_hot_encoding(x, permitted_list):
     if x not in permitted_list:
         x = permitted_list[-1]  
@@ -154,7 +153,7 @@ def get_bond_features(bond, atom_i, atom_j, record_type_map):
     features = np.concatenate([bond_type_enc, conj_enc, ring_enc, stereo_enc])
     return features
 
-# ==========相互作用边类型编码配置 ==========
+# ========== Interaction ==========
 interface_edge_types = [
     'cross_salt_bridge',  # 0（salt bridges）
     'cross_hbond',        # 1（hydrogen bonds）
@@ -603,11 +602,11 @@ class ProteinFeatureExtractor:
                     if residue.has_id(atom_name):
                         ca = residue[atom_name]
                         if atom_name != 'CA':
-                            print(f"残基 {resname}{res_id[1]} 使用备用原子 {atom_name}")
+                            print(f"Residue {resname}{res_id[1]} uses backup atom {atom_name}")
                         break
 
                 if ca is None:
-                    print(f"残基 {resname}{res_id[1]} 缺失骨架原子，已跳过")
+                    print(f"Residue {resname}{res_id[1]} is missing backbone atoms and has been skipped")
                     continue
                 if ca is not None:
                     self.residues.append(residue) 
@@ -616,7 +615,7 @@ class ProteinFeatureExtractor:
                     self.valid_residues.append((chain_id, resnum))
         
         if len(sequence) ==0 :
-            print(f"警告: 蛋白质文件 {self.protein_file} 无任何有效残基")
+            print(f"Warning: protein file {self.protein_file} contains no valid residues")
         
         return np.array(ca_coords), ''.join(sequence)
 
@@ -629,7 +628,7 @@ class ProteinFeatureExtractor:
                 for line in f:
                     parts = line.strip().split(':')
                     if len(parts) < 2:
-                        print(f"格式错误行（缺少冒号）: {line.strip()}")
+                        print(f"Format Error Row: {line.strip()}")
                         continue
                     res_info, ss = parts[0].strip(), parts[1].strip()
                     chain_id, res_num = res_info.split('/')
@@ -640,10 +639,10 @@ class ProteinFeatureExtractor:
                         idx = residue_index_map[res_id]
                         ss_onehot[idx] = one_hot_encoding(ss, dssp_table)
                     else:
-                        print(f"未在序列中找到残基信息: {res_info}")
+                        print(f"No residual information found in the sequence: {res_info}")
 
         except Exception as e:
-            print(f"读取 ss2 文件失败: {str(e)}")
+            print(f"Failure to read ss2 file: {str(e)}")
             ss_seq = ['C'] * len(self.sequence)
             ss_onehot = np.zeros((len(self.sequence), DSSP_FEAT_DIM))
 
@@ -713,12 +712,12 @@ class ProteinFeatureExtractor:
                     edges, attrs = method()
 
                 if not (isinstance(edges, list) and isinstance(attrs, list)):
-                    raise TypeError("边生成函数必须返回两个列表")
+                    raise TypeError("Edge generation function must return two lists")
 
                 all_edges.extend(edges)
                 all_attrs.extend(attrs)
             except Exception as e:
-                print(f"生成边类型 {edge_type} 失败: {str(e)}")
+                print(f"Failed to generate edge type {edge_type}: {str(e)}")
                 continue
         
         return all_edges, all_attrs
@@ -726,7 +725,7 @@ class ProteinFeatureExtractor:
 #=============================
 def get_residue_features(sequence, ss_onehot):
     if len(sequence) != ss_onehot.shape[0]:
-        raise ValueError(f"特征维度不匹配: 序列长度({len(sequence)}) != SS特征数({ss_onehot.shape[0]})")
+        raise ValueError(f"Feature dimension mismatch: sequence length ({len(sequence)}) != number of SS features ({ss_onehot.shape[0]})")
 
     seq_onehot = np.zeros((len(sequence), len(res_table)))
     for i, res in enumerate(sequence):
@@ -751,24 +750,24 @@ def get_protein_features(protein_file, complex_id, ss2_file):
     try:
         extractor = ProteinFeatureExtractor(protein_file, complex_id, ss2_file)
         if not extractor.res_features:
-            raise ValueError("未提取到任何残基特征")
+            raise ValueError("No residue features were extracted")
         if len(extractor.sequence) == 0:
-            raise ValueError("空蛋白质结构")
+            raise ValueError("Empty protein structure")
         
         try:
             ss_onehot, ss_seq = extractor.get_dssp_features(ss2_file)
             if len(ss_seq) != len(extractor.sequence):
-                print(f"警告: DSSP长度({len(ss_seq)})与序列长度({len(extractor.sequence)})不匹配，使用默认值")
+                print(f"Warning: DSSP length ({len(ss_seq)}) does not match sequence length ({len(extractor.sequence)}) ")
         except Exception as dssp_error:
-            print(f"DSSP特征计算失败: {str(dssp_error)}")
+            print(f"Failed to compute DSSP features: {str(dssp_error)}")
             ss_onehot = np.zeros((len(extractor.sequence), DSSP_FEAT_DIM))
             ss_seq = ['C'] * len(extractor.sequence)
         
-        print(f'[DEBUG] get_protein_features: valid_residues样例={extractor.valid_residues[:5] if hasattr(extractor, "valid_residues") else None}, ss_onehot shape={ss_onehot.shape}')
+        print(f'[DEBUG] get_protein_features: valid_residues sample={extractor.valid_residues[:5] if hasattr(extractor, "valid_residues") else None}, ss_onehot shape={ss_onehot.shape}')
 
         residue_features = get_residue_features(extractor.sequence, ss_onehot)
         if len(residue_features) == 0:
-            raise ValueError("空残基特征")
+            raise ValueError("Empty residue features")
 
         edges, edge_attrs = extractor.get_all_edges(ss_seq)
         edges = np.array(edges)  
@@ -789,7 +788,7 @@ def get_protein_features(protein_file, complex_id, ss2_file):
 
         return protein_data
     except Exception as e:
-        print(f"蛋白质处理失败: {str(e)}")
+        print(f"Protein processing failed: {str(e)}")
         return None
 
 # ========== ligand properties ==========
@@ -814,8 +813,8 @@ def calculate_ligand_properties(ligand_mol, complex_id):
             ])
         }
     except Exception as e:
-        print(f"[{complex_id}]配体属性计算失败: {str(e)}")
-        lig_properties_error_ids.append(complex_id)  # 新增：记录错误ID
+        print(f"[{complex_id}] Ligand property calculation failed: {str(e)}")
+        lig_properties_error_ids.append(complex_id)  # record error ID
         return None
 
 #========atom graph==========
@@ -824,7 +823,7 @@ def build_atom_graph(mol, ligand_mol, label, record_type_map, complex_id, ligand
         return None
     conf = mol.GetConformer()
     if conf is None:
-        print("分子构象无效")
+        print("Invalid molecular conformer")
         return None
 
     n_atoms = mol.GetNumAtoms()
@@ -931,25 +930,25 @@ def build_atom_graph(mol, ligand_mol, label, record_type_map, complex_id, ligand
         mol=mol
     )
 
-# ========== 主处理流程 ==========
+# ========== Main processing pipeline ==========
 def process_complex(complex_id, label, complex_dir, output_dir, ss2_dir, debug=True):
     complex_file = os.path.join(complex_dir, f"{complex_id}_pocket_ligand.pdb")
     ss2_file = os.path.join(ss2_dir, f"{complex_id}.ss2")
     
-    print(f"正在处理复合物: {complex_id}")
+    print(f"Processing complex: {complex_id}")
     if not os.path.exists(complex_file):
-        print(f"复合物文件 {complex_file} 不存在，跳过该复合物")
+        print(f"Complex file {complex_file} does not exist, skipping this complex")
         miss_data.append(complex_id)
         return None
     if not os.path.exists(ss2_file):
-        print(f"ss2 文件 {ss2_file} 不存在，跳过该复合物")
+        print(f"ss2 file {ss2_file} does not exist, skipping this complex")
         miss_data.append(complex_id)
         return None
 
     temp_dir = os.path.join(output_dir, "temp")
     os.makedirs(temp_dir, exist_ok=True)
     
-    print(f"[{complex_id}] 开始分割蛋白配体")
+    print(f"[{complex_id}] Starting protein–ligand separation")
     protein_file = os.path.join(temp_dir, f"{complex_id}_protein.pdb")
     ligand_file = os.path.join(temp_dir, f"{complex_id}_ligand.pdb")
     
@@ -969,33 +968,33 @@ def process_complex(complex_id, label, complex_dir, output_dir, ss2_dir, debug=T
                 lig_lines.append(line)
     
     if not lig_lines:
-        print(f"复合物 {complex_id} 未找到配体")
+        print(f"Complex {complex_id} does not contain a ligand")
         return None
     
     with open(ligand_file, 'w') as f_lig:
         f_lig.writelines(lig_lines)
 
-    print(f"[{complex_id}] 开始读取分子")
+    print(f"[{complex_id}] Reading molecules ")
     ligand_mol = Chem.MolFromPDBFile(ligand_file, sanitize=False, removeHs=False)
     protein_mol = Chem.MolFromPDBFile(protein_file, sanitize=False, removeHs=False)
     print(f"配体原子数: {ligand_mol.GetNumAtoms() if ligand_mol else 0}")
     ligand_props = calculate_ligand_properties(ligand_mol, complex_id)
     if ligand_props is None:
-        print(f"[{complex_id}] 配体属性计算失败，跳过复合物")
+        print(f"[{complex_id}] Ligand property calculation failed, skipping complex ")
         return None
 
-    print(f"[{complex_id}] 开始氢处理")
+    print(f"[{complex_id}] Starting hydrogen processing ")
     ligand_mol = process_hydrogens(ligand_mol, complex_id, is_ligand=True) 
     protein_mol = process_hydrogens(protein_mol, complex_id, is_ligand=False) 
-    print(f"加氢后配体原子数: {ligand_mol.GetNumAtoms() if ligand_mol else 0}")
+    print(f"Ligand atom count after adding hydrogens: {ligand_mol.GetNumAtoms() if ligand_mol else 0}")
 
     if protein_mol is None or ligand_mol is None:
-        print(f"[{complex_id}] 蛋白质和配体H处理失败")
+        print(f"[{complex_id}] Hydrogen processing failed for protein or ligand ")
         return None
-    print(f"[{complex_id}] 开始合并分子")
+    print(f"[{complex_id}] Merging molecules")
     mol = Chem.CombineMols(ligand_mol, protein_mol)
     if mol is None :
-        print(f"无法读取分子文件 {complex_id}")
+        print(f"Failed to read molecule file for {complex_id}")
         return None
 
     record_type_map = {}
@@ -1008,10 +1007,10 @@ def process_complex(complex_id, label, complex_dir, output_dir, ss2_dir, debug=T
     try:
         protein_data = get_protein_features(protein_file, complex_id, ss2_file)
         if protein_data is None or protein_data.x.size(0) == 0:
-            print(f"复合物 {complex_id} 蛋白质数据无效或为空")
+            print(f"Protein data for complex {complex_id} is invalid or empty")
             return None
         if not all(hasattr(protein_data, attr) for attr in ['x', 'edge_index', 'ca_coords', 'res_features']):
-            print(f"复合物 {complex_id} 蛋白质数据不完整")
+            print(f"Incomplete protein data for complex {complex_id}")
             return None
 
         protein_valid_residues = getattr(protein_data, 'valid_residues', None)
@@ -1023,21 +1022,21 @@ def process_complex(complex_id, label, complex_dir, output_dir, ss2_dir, debug=T
             protein_ss_onehot=protein_ss_onehot
         )
         if atom_graph is None or atom_graph.x.size(0) == 0:
-            print(f"复合物 {complex_id} 原子图数据不完整")
+            print(f"Incomplete atom graph data for complex {complex_id}")
             return None
 
         return atom_graph
 
-# ========== 氢原子处理函数 ==========
+# ========== Hydrogen processing function ==========
 def process_hydrogens(mol, complex_id, is_ligand=True): 
     if mol is None:
         return None
     try:
-        print(f"[{complex_id}] {'配体' if is_ligand else '蛋白质'}原始原子数: {mol.GetNumAtoms()}")
+        print(f"[{complex_id}] Original atom count ({'ligand' if is_ligand else 'protein'}): {mol.GetNumAtoms()}")
         
         if is_ligand:
             mol = Chem.RemoveHs(mol, implicitOnly=False)
-            print(f"[{complex_id}] 移除所有氢后原子数: {mol.GetNumAtoms()}")
+            print(f"[{complex_id}] Atom count after removing all hydrogens: {mol.GetNumAtoms()}")
             
             polar_atoms = []
             for atom in mol.GetAtoms():
@@ -1052,38 +1051,38 @@ def process_hydrogens(mol, complex_id, is_ligand=True):
 
                     if current_bonds < max_valence:
                         polar_atoms.append(atom.GetIdx())
-                        print(f"  - 原子 {atom.GetIdx()} ({symbol}) 可加氢: {current_bonds}/{max_valence}键")
+                        print(f"Atom {atom.GetIdx()} ({symbol}) can accept hydrogens: {current_bonds}/{max_valence} bonds ")
 
-            print(f"[{complex_id}] 需要添加极性氢的原子数: {len(polar_atoms)}")
+            print(f"[{complex_id}] Number of atoms requiring polar hydrogens: {len(polar_atoms)}")
             
             if polar_atoms:
                 original_atom_indices = {a.GetIdx() for a in mol.GetAtoms()}
                 temp_mol = Chem.AddHs(mol, onlyOnAtoms=polar_atoms, addCoords=True)
                 added_hs = [a for a in temp_mol.GetAtoms() if a.GetAtomicNum() == 1] 
-                print(f"[{complex_id}] 添加极性氢后原子数: {temp_mol.GetNumAtoms()}")
+                print(f"[{complex_id}] Atom count after adding polar hydrogens: {temp_mol.GetNumAtoms()}")
                 if len(added_hs) > 0:
                     mol = temp_mol
                 else:
-                    print(f"[{complex_id}] 警告: 添加氢失败，使用原始分子")
+                    print(f"[{complex_id}] Warning: failed to add hydrogens, using original molecule ")
         else:
             pass
 
         try:
-            print(f"[{complex_id}] 开始分子净化")
+            print(f"[{complex_id}]  Starting molecule sanitization ")
             mol.UpdatePropertyCache(strict=False)
             rdmolops.SanitizeMol(mol, sanitizeOps=SanitizeFlags.SANITIZE_ALL ^ SanitizeFlags.SANITIZE_ADJUSTHS)
         except Exception as sanitize_error:
-            print(f"[{complex_id}] 化学键推断失败: {str(sanitize_error)}")
+            print(f"[{complex_id}] Bond perception failed: {str(sanitize_error)}")
             rdmolops.SanitizeMol(mol, sanitizeOps=SanitizeFlags.SANITIZE_FINDRINGS | SanitizeFlags.SANITIZE_SETAROMATICITY)
-        print(f"[{complex_id}] 净化后原子数: {mol.GetNumAtoms()}")
+        print(f"[{complex_id}] Atom count after sanitization: {mol.GetNumAtoms()}")
         return mol
 
     except Exception as e:
-        print(f"[{complex_id}] 氢处理最终失败: {str(e)}")
+        print(f"[{complex_id}] Final hydrogen processing failed: {str(e)}")
         H_error_ids.append(complex_id)
         return None
 
-# ========== 数据集处理 ==========
+# ========== Dataset processing ==========
 def process_dataset(complex_dir, key_file, output_dir, ss2_dir):
     complex_infos = []
     with open(key_file, 'r') as f:
@@ -1093,13 +1092,13 @@ def process_dataset(complex_dir, key_file, output_dir, ss2_dir):
                 try:
                     complex_infos.append((parts[0], float(parts[1])))
                 except ValueError:
-                    print(f"无效行: {line.strip()}")
+                    print(f"Invalid line: {line.strip()}")
 
     atom_graphs = []
     skipped_complexes = []
     processed_count = 0     
 
-    for idx, (cid, label) in enumerate(tqdm(complex_infos, desc="处理复合物")):
+    for idx, (cid, label) in enumerate(tqdm(complex_infos, desc="Processing complexes")):
         try:
             atom_g = process_complex(cid, label, complex_dir, output_dir, ss2_dir, debug=True)
             if atom_g:
@@ -1108,23 +1107,23 @@ def process_dataset(complex_dir, key_file, output_dir, ss2_dir):
             else:
                 skipped_complexes.append(cid)
         except Exception as e:
-            print(f"处理复合物 {cid} 时发生严重错误:")
+            print(f"Critical error occurred while processing complex {cid} ")
             import traceback
             traceback.print_exc()
             skipped_complexes.append(cid)
 
-    print(f"\n===== 处理完成 =====")
-    print(f"成功处理复合物: {processed_count}")
-    print(f"文件丢失复合物: {len(miss_data)}")
-    print(f"列表：{miss_data}")
-    print(f"ligand属性计算失败的复合物: {len(lig_properties_error_ids)}")
-    print(f"列表: {lig_properties_error_ids}")
-    print(f"氢处理失败的复合物: {len(H_error_ids)}")
-    print(f"列表: {H_error_ids}")
-    print(f"图处理跳过: {len(skipped_complexes)}个")
-    print(f"列表: {skipped_complexes}")
+    print(f"\n===== Processing completed =====")
+    print(f"Successfully processed complexes: {processed_count}")
+    print(f"Complexes with missing files: {len(miss_data)}")
+    print(f"List：{miss_data}")
+    print(f"Complexes with ligand property calculation failure: {len(lig_properties_error_ids)}")
+    print(f"List: {lig_properties_error_ids}")
+    print(f"Complexes with hydrogen processing failure: {len(H_error_ids)}")
+    print(f"List: {H_error_ids}")
+    print(f"Skipped during graph construction: {len(skipped_complexes)}个")
+    print(f"List: {skipped_complexes}")
 
-    # 清理临时目录
+    # Clean up temporary directory
     temp_dir = os.path.join(output_dir, "temp")
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
@@ -1160,7 +1159,7 @@ def save_graphs(graph_list, path):
     
     np.save(path, saved_data, allow_pickle=True)
 
-# ========== 主程序 ==========
+# ========== Main entry ==========
 if __name__ == "__main__":
     config = {
         "complex_dir": "./dataset/v2020/complex-pocket-ligand",
@@ -1179,4 +1178,5 @@ if __name__ == "__main__":
     os.makedirs(config["output_dir"], exist_ok=True)
 
     save_graphs(atom_graphs, f"{config['output_dir']}/atom_graphs.npy")
+
 
