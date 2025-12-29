@@ -28,7 +28,7 @@ def get_ligand_center(structure):
     candidates = {k: v for k, v in het_residues.items() if k not in exclude_list}
 
     if not candidates:
-        raise ValueError("未找到有效配体")
+        raise ValueError("No valid ligand found")
 
     main_ligand = next(iter(candidates.values()))
     return np.mean([atom.get_coord() for atom in main_ligand], axis=0)
@@ -39,7 +39,7 @@ def validate_pocket(pdb_file):
     try:
         structure = parser.get_structure('validation', pdb_file)
     except Exception as e:
-        print(f"解析口袋文件失败: {str(e)}", file=sys.stderr)
+        print(f"Failed to parse pocket file: {str(e)}", file=sys.stderr)
         return False
 
     REQUIRED_ATOMS = {'N', 'CA', 'C', 'O'}
@@ -60,9 +60,9 @@ def validate_pocket(pdb_file):
 
     missing_ca = [rec for rec in missing_records if 'CA' in rec[1]]
     if missing_ca:
-        print("尝试修复缺失 CA 的残基...")
+        print("Attempting to repair residues missing CA atoms...")
         for res in missing_ca:
-            print(f"  - 残基序号 {res[0]} 缺失原子: {', '.join(res[1])}", file=sys.stderr)
+            print(f"Residue {res[0]} missing atoms: {', '.join(res[1])}", file=sys.stderr)
         return False
     return True
 
@@ -82,7 +82,7 @@ def extract_pocket(input_pdb, output_pdb, output_ss_file, radius=15):
         model = structure[0]
         dssp = DSSP(model, input_pdb)
     except Exception as e:
-        print(f"Error: DSSP 计算失败: {str(e)}", file=sys.stderr)
+        print(f"Error: DSSP computation failed: {str(e)}", file=sys.stderr)
         return 1
 
     keep_residues = set()
@@ -123,7 +123,7 @@ def extract_pocket(input_pdb, output_pdb, output_ss_file, radius=15):
                         continue
 
     if not validate_pocket(output_pdb):
-        print(f"Error: 口袋文件 {output_pdb} 包含不完整的残基。", file=sys.stderr)
+        print(f"Error: Pocket file {output_pdb} contains incomplete residues.", file=sys.stderr)
         os.remove(output_pdb)
         return 1
 
