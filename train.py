@@ -90,7 +90,7 @@ def train_full_model(
 
 
 if __name__ == "__main__":
-    DATA_PATH = "../graph/v2020/atom_graphs.npy"
+    DATA_PATH = "./dataset/v2020/feature_graph.npy"
     best_rmse = train_full_model(
         data_path=DATA_PATH,
         batch_size=32,
@@ -104,4 +104,5 @@ if __name__ == "__main__":
         save_dir="./model_v2020"
     )
     print("Best RMSE:", best_rmse)
+
 
